@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Reolink ISP",
+        "description": "Connect directly to a Reolink camera and expose lean ISP controls for exposure, shutter and gain.",
+        "data": {
+          "host": "IP address or host[:port]",
+          "protocol": "Protocol",
+          "username": "Username",
+          "password": "Password",
+          "verify_ssl": "Verify HTTPS certificate",
+          "channel": "Channel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the camera",
+      "invalid_auth": "Authentication failed",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This camera is already configured"
+    }
+  }
+}
