@@ -22,5 +22,33 @@
     "abort": {
       "already_configured": "This camera is already configured"
     }
+  },
+  "services": {
+    "apply_settings": {
+      "name": "Apply settings",
+      "description": "Apply multiple ISP settings to one camera in a single write.",
+      "fields": {
+        "exposure": {
+          "name": "Exposure",
+          "description": "Optional exposure mode to apply before validating gain and shutter fields."
+        },
+        "shutter_min": {
+          "name": "Shutter Min",
+          "description": "Optional shutter minimum. Valid when exposure is Manual or Anti-Smearing."
+        },
+        "shutter_max": {
+          "name": "Shutter Max",
+          "description": "Optional shutter maximum. Valid when exposure is Manual or Anti-Smearing."
+        },
+        "gain_min": {
+          "name": "Gain Min",
+          "description": "Optional gain minimum. Valid when exposure is Manual."
+        },
+        "gain_max": {
+          "name": "Gain Max",
+          "description": "Optional gain maximum. Valid when exposure is Manual."
+        }
+      }
+    }
   }
 }

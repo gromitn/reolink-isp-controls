@@ -20,3 +20,10 @@ CONF_CHANNEL = "channel"
 UPDATE_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
 EXPOSURE_OPTIONS = ["Auto", "LowNoise", "Anti-Smearing", "Manual"]
+
+SERVICE_APPLY_SETTINGS = "apply_settings"
+ATTR_EXPOSURE = "exposure"
+ATTR_SHUTTER_MIN = "shutter_min"
+ATTR_SHUTTER_MAX = "shutter_max"
+ATTR_GAIN_MIN = "gain_min"
+ATTR_GAIN_MAX = "gain_max"

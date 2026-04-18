@@ -1,0 +1,46 @@
+apply_settings:
+  target:
+    device:
+      integration: reolink_isp
+  fields:
+    exposure:
+      example: "Anti-Smearing"
+      selector:
+        select:
+          options:
+            - "Auto"
+            - "LowNoise"
+            - "Anti-Smearing"
+            - "Manual"
+    shutter_min:
+      example: 3
+      selector:
+        number:
+          min: 0
+          max: 125
+          step: 1
+          mode: box
+    shutter_max:
+      example: 3
+      selector:
+        number:
+          min: 0
+          max: 125
+          step: 1
+          mode: box
+    gain_min:
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 62
+          step: 1
+          mode: box
+    gain_max:
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 62
+          step: 1
+          mode: box

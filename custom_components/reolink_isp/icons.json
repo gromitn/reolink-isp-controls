@@ -1,0 +1,7 @@
+{
+  "services": {
+    "apply_settings": {
+      "service": "mdi:tune-variant"
+    }
+  }
+}
