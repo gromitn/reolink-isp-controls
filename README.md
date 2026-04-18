@@ -16,6 +16,7 @@ This integration currently provides:
   - **Gain Max**
   - **Shutter Min**
   - **Shutter Max**
+- Device-level custom action **`reolink_isp.apply_settings`** for atomic multi-setting writes
 - Read-back polling so Home Assistant reflects what the camera actually saved
 - The proven staged workaround for locked shutter and gain changes on affected firmware
 
@@ -33,6 +34,9 @@ This integration is designed to expose just those useful controls in Home Assist
   - Available when **Exposure = Manual**
 - **Shutter Min / Shutter Max**
   - Available when **Exposure = Manual** or **Exposure = Anti-Smearing**
+- **Apply settings action**
+  - Can apply any combination of exposure, shutter, and gain in a single camera write
+  - Targets the device, not an individual entity
 
 When a setting is changed, the integration writes it to the camera and then reads the ISP settings back so Home Assistant shows the actual saved value.
 
@@ -81,6 +85,22 @@ Add one camera at a time using:
 - channel
 
 For most direct-to-camera setups, `channel` should remain `0`.
+
+## Atomic multi-setting action
+
+Example automation/dev-tools action:
+
+```yaml
+service: reolink_isp.apply_settings
+target:
+  device_id: YOUR_DEVICE_ID
+data:
+  exposure: Manual
+  shutter_min: 3
+  shutter_max: 3
+  gain_min: 30
+  gain_max: 30
+```
 
 ## Notes
 
