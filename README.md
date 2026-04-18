@@ -61,7 +61,7 @@ That helps the new value actually stick on the camera.
 
 Deliberately out of scope for this version:
 
-- backup / restore
+- backup / restore - See [Reolink ISP Tool](https://github.com/gromitn/reolink-isp-tool).
 - the wider ISP settings surface
 - desktop UI features
 - update checker logic from the desktop tool
