@@ -20,7 +20,7 @@ This integration currently provides:
 - Read-back polling so Home Assistant reflects what the camera actually saved
 - The proven staged workaround for locked shutter and gain changes on affected firmware
 
-## Companion tool
+## Companion tool for Windows
 
 There’s also a companion Windows app: [Reolink ISP Tool](https://github.com/gromitn/reolink-isp-tool).
 
