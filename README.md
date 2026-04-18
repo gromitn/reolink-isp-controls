@@ -64,7 +64,7 @@ Deliberately out of scope for this version:
 ## Installation
 
 ### HACS
-1. Add this repository as a custom repository in HACS, category **Integration**
+1. Add this repository as a custom repository in HACS under the Integration category
 2. Download **Reolink ISP Controls**
 3. Restart Home Assistant
 4. Add the integration from **Settings → Devices & Services**
@@ -88,10 +88,27 @@ For most direct-to-camera setups, `channel` should remain `0`.
 
 ## Atomic multi-setting action
 
-Example automation/dev-tools action:
+Use the device-level action `reolink_isp.apply_settings` when you want multiple ISP values applied in a single camera write.
+
+This is especially useful when changing locked shutter or gain values, or when changing exposure mode and related values together.
+
+Supported fields:
+
+- `exposure`
+- `shutter_min`
+- `shutter_max`
+- `gain_min`
+- `gain_max`
+
+Rules:
+
+- `gain_min` and `gain_max` require `exposure: Manual`
+- `shutter_min` and `shutter_max` require `exposure: Manual` or `Anti-Smearing`
+
+Example action:
 
 ```yaml
-service: reolink_isp.apply_settings
+action: reolink_isp.apply_settings
 target:
   device_id: YOUR_DEVICE_ID
 data:
