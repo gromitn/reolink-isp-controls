@@ -20,6 +20,12 @@ This integration currently provides:
 - Read-back polling so Home Assistant reflects what the camera actually saved
 - The proven staged workaround for locked shutter and gain changes on affected firmware
 
+## Companion tool
+
+There’s also a companion Windows app: [Reolink ISP Tool](https://github.com/gromitn/reolink-isp-tool).
+
+That one is handy if you want a simple desktop UI for reading, tweaking, verifying, and backing up Reolink ISP settings directly from the camera. It’s a good fit for setup, experimentation, and backup/restore type jobs, whereas this Home Assistant integration is more about ongoing control and automation.
+
 ## Why this exists
 
 Some Reolink cameras and firmware combinations support ISP settings such as shutter and gain through the CGI API, but do not expose them properly in the normal app or web UI.
