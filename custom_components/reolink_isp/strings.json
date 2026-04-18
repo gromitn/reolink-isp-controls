@@ -23,6 +23,17 @@
       "already_configured": "This camera is already configured"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Reolink ISP options",
+        "description": "Adjust integration behavior for this camera.",
+        "data": {
+          "poll_interval": "Poll interval (seconds)"
+        }
+      }
+    }
+  },
   "services": {
     "apply_settings": {
       "name": "Apply settings",

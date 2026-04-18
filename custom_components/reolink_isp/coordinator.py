@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import ReolinkIspClient
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
 from .errors import ReolinkIspError
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,12 +35,14 @@ class ReolinkIspCoordinator(DataUpdateCoordinator[ReolinkIspSnapshot]):
         entry: ConfigEntry,
         client: ReolinkIspClient,
     ) -> None:
+        poll_interval = entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
+
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{entry.entry_id}",
             config_entry=entry,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=poll_interval),
             always_update=False,
         )
         self.client = client
