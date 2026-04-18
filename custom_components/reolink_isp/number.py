@@ -88,6 +88,7 @@ class ReolinkIspNumber(ReolinkIspEntity, NumberEntity):
 
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
+    _attr_suggested_display_precision = 0
 
     def __init__(
         self,
@@ -113,7 +114,7 @@ class ReolinkIspNumber(ReolinkIspEntity, NumberEntity):
         value = block.get(self.entity_description.item)
         if value is None:
             return None
-        return float(value)
+        return int(value)
 
     async def async_set_native_value(self, value: float) -> None:
         exposure = str(self._isp.get("exposure", ""))
@@ -121,6 +122,11 @@ class ReolinkIspNumber(ReolinkIspEntity, NumberEntity):
             allowed = ", ".join(self.entity_description.allowed_exposures)
             raise HomeAssistantError(
                 f"{self.entity_description.name} is only available when Exposure is {allowed}"
+            )
+
+        if value != int(value):
+            raise HomeAssistantError(
+                f"{self.entity_description.name} must be a whole number"
             )
 
         isp = deepcopy(self._isp)

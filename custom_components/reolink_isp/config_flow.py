@@ -93,14 +93,17 @@ class ReolinkIspConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.In(["http", "https"]),
-                    vol.Required(CONF_USERNAME, default="admin"): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-                    vol.Optional(CONF_CHANNEL, default=DEFAULT_CHANNEL): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Required(
+                        CONF_POLL_INTERVAL,
+                        default=current_poll,
+                    ): vol.All(vol.Coerce(int), vol.Range(min=5, max=300)),
+                    vol.Required(
+                        CONF_VERIFY_SSL,
+                        default=self._config_entry.options.get(
+                            CONF_VERIFY_SSL,
+                            self._config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                        ),
+                    ): bool,
                 }
             ),
             errors=errors,

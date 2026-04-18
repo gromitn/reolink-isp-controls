@@ -91,7 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ReolinkIspConfigEntry) -
         host=entry.data[CONF_HOST],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        verify_ssl=entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        verify_ssl=entry.options.get(
+            CONF_VERIFY_SSL,
+            entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        ),
         channel=entry.data.get(CONF_CHANNEL, DEFAULT_CHANNEL),
     )
 
