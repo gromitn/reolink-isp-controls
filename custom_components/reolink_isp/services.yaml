@@ -44,3 +44,31 @@ apply_settings:
           max: 62
           step: 1
           mode: box
+
+save_profile:
+  target:
+    device:
+      integration: reolink_isp
+  fields:
+    profile:
+      example: "day"
+      selector:
+        select:
+          options:
+            - "day"
+            - "gloomy"
+            - "night"
+
+apply_profile:
+  target:
+    device:
+      integration: reolink_isp
+  fields:
+    profile:
+      example: "night"
+      selector:
+        select:
+          options:
+            - "day"
+            - "gloomy"
+            - "night"

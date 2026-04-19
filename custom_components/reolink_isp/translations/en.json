@@ -34,5 +34,53 @@
         }
       }
     }
+  },
+  "services": {
+    "apply_settings": {
+      "name": "Apply settings",
+      "description": "Apply multiple ISP settings to one camera in a single write.",
+      "fields": {
+        "exposure": {
+          "name": "Exposure",
+          "description": "Optional exposure mode to apply before validating gain and shutter fields."
+        },
+        "shutter_min": {
+          "name": "Shutter Min",
+          "description": "Optional shutter minimum. Valid when exposure is Manual or Anti-Smearing."
+        },
+        "shutter_max": {
+          "name": "Shutter Max",
+          "description": "Optional shutter maximum. Valid when exposure is Manual or Anti-Smearing."
+        },
+        "gain_min": {
+          "name": "Gain Min",
+          "description": "Optional gain minimum. Valid when exposure is Manual."
+        },
+        "gain_max": {
+          "name": "Gain Max",
+          "description": "Optional gain maximum. Valid when exposure is Manual."
+        }
+      }
+    },
+    "save_profile": {
+      "name": "Save profile",
+      "description": "Save the camera's current Reolink ISP settings into one of the named profile slots.",
+      "fields": {
+        "profile": {
+          "name": "Profile",
+          "description": "Choose which saved profile slot to overwrite: day, gloomy, or night."
+        }
+      }
+    },
+    "apply_profile": {
+      "name": "Apply profile",
+      "description": "Apply a previously saved Reolink ISP profile to the camera in one write.",
+      "fields": {
+        "profile": {
+          "name": "Profile",
+          "description": "Choose which saved profile slot to apply: day, gloomy, or night."
+        }
+      }
+    }
   }
 }

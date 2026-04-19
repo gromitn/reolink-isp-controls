@@ -33,6 +33,12 @@ from .const import (
     EXPOSURE_OPTIONS,
     PLATFORMS,
     SERVICE_APPLY_SETTINGS,
+    ATTR_PROFILE,
+    OPTION_LAST_APPLIED_PROFILE,
+    OPTION_PROFILES,
+    PROFILE_OPTIONS,
+    SERVICE_APPLY_PROFILE,
+    SERVICE_SAVE_PROFILE,
 )
 from .coordinator import ReolinkIspCoordinator
 from .errors import CannotConnect, InvalidAuth, ReolinkIspError
@@ -50,6 +56,12 @@ SERVICE_SCHEMA = vol.Schema(
     }
 )
 
+PROFILE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): vol.Any(cv.string, [cv.string]),
+        vol.Required(ATTR_PROFILE): vol.In(PROFILE_OPTIONS),
+    }
+)
 
 @dataclass(slots=True)
 class ReolinkIspRuntimeData:
@@ -77,6 +89,30 @@ async def async_setup(hass: HomeAssistant, _config: dict[str, Any]) -> bool:
             SERVICE_APPLY_SETTINGS,
             async_handle_apply_settings,
             schema=SERVICE_SCHEMA,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SAVE_PROFILE):
+
+        async def async_handle_save_profile(call: ServiceCall) -> None:
+            await _async_handle_save_profile(hass, call)
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SAVE_PROFILE,
+            async_handle_save_profile,
+            schema=PROFILE_SERVICE_SCHEMA,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_APPLY_PROFILE):
+
+        async def async_handle_apply_profile(call: ServiceCall) -> None:
+            await _async_handle_apply_profile(hass, call)
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_APPLY_PROFILE,
+            async_handle_apply_profile,
+            schema=PROFILE_SERVICE_SCHEMA,
         )
 
     return True
@@ -126,6 +162,37 @@ async def _async_update_listener(hass: HomeAssistant, entry: ReolinkIspConfigEnt
     """Reload when options are updated."""
     await hass.config_entries.async_reload(entry.entry_id)
 
+def _profile_payload_from_isp(isp: dict[str, Any]) -> dict[str, Any]:
+    """Extract the profile-relevant ISP values we own."""
+    exposure = str(isp.get("exposure", "")).strip()
+
+    payload: dict[str, Any] = {
+        ATTR_EXPOSURE: exposure,
+    }
+
+    if exposure in {"Manual", "Anti-Smearing"}:
+        shutter = isp.get("shutter", {}) or {}
+        if "min" in shutter:
+            payload[ATTR_SHUTTER_MIN] = int(shutter["min"])
+        if "max" in shutter:
+            payload[ATTR_SHUTTER_MAX] = int(shutter["max"])
+
+    if exposure == "Manual":
+        gain = isp.get("gain", {}) or {}
+        if "min" in gain:
+            payload[ATTR_GAIN_MIN] = int(gain["min"])
+        if "max" in gain:
+            payload[ATTR_GAIN_MAX] = int(gain["max"])
+
+    return payload
+
+
+def _get_saved_profiles(entry: ConfigEntry) -> dict[str, dict[str, Any]]:
+    """Return saved profiles from entry options."""
+    profiles = entry.options.get(OPTION_PROFILES, {})
+    if isinstance(profiles, dict):
+        return deepcopy(profiles)
+    return {}
 
 async def _async_handle_apply_settings(hass: HomeAssistant, call: ServiceCall) -> None:
     """Apply multiple ISP settings in one atomic camera write."""
@@ -188,6 +255,99 @@ async def _async_handle_apply_settings(hass: HomeAssistant, call: ServiceCall) -
 
     await coordinator.async_request_refresh()
 
+async def _async_handle_save_profile(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Save the current camera settings into a named profile slot."""
+    device_ids = call.data[ATTR_DEVICE_ID]
+    if isinstance(device_ids, str):
+        device_ids = [device_ids]
+
+    if len(device_ids) != 1:
+        raise HomeAssistantError("Select exactly one Reolink ISP device")
+
+    profile = str(call.data[ATTR_PROFILE]).strip().lower()
+
+    runtime = _runtime_from_device_id(hass, device_ids[0])
+    entry = _entry_from_device_id(hass, device_ids[0])
+
+    profiles = _get_saved_profiles(entry)
+    profiles[profile] = _profile_payload_from_isp(runtime.coordinator.data.isp)
+
+    new_options = dict(entry.options)
+    new_options[OPTION_PROFILES] = profiles
+
+    hass.config_entries.async_update_entry(entry, options=new_options)
+
+async def _async_handle_apply_profile(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Apply a previously saved named profile."""
+    device_ids = call.data[ATTR_DEVICE_ID]
+    if isinstance(device_ids, str):
+        device_ids = [device_ids]
+
+    if len(device_ids) != 1:
+        raise HomeAssistantError("Select exactly one Reolink ISP device")
+
+    profile = str(call.data[ATTR_PROFILE]).strip().lower()
+
+    runtime = _runtime_from_device_id(hass, device_ids[0])
+    entry = _entry_from_device_id(hass, device_ids[0])
+
+    profiles = _get_saved_profiles(entry)
+    payload = profiles.get(profile)
+
+    if not isinstance(payload, dict) or not payload:
+        raise HomeAssistantError(f"Profile '{profile}' has not been saved yet")
+
+    coordinator = runtime.coordinator
+    isp = deepcopy(coordinator.data.isp)
+    final_exposure = str(payload.get(ATTR_EXPOSURE, isp.get("exposure", ""))).strip()
+
+    if ATTR_EXPOSURE in payload:
+        isp["exposure"] = final_exposure
+
+    if ATTR_SHUTTER_MIN in payload or ATTR_SHUTTER_MAX in payload:
+        if final_exposure not in {"Manual", "Anti-Smearing"}:
+            raise HomeAssistantError(
+                "Shutter settings can only be applied when Exposure is Manual or Anti-Smearing"
+            )
+        isp.setdefault("shutter", {})
+        if ATTR_SHUTTER_MIN in payload:
+            isp["shutter"]["min"] = payload[ATTR_SHUTTER_MIN]
+        if ATTR_SHUTTER_MAX in payload:
+            isp["shutter"]["max"] = payload[ATTR_SHUTTER_MAX]
+        _ensure_min_max_order(isp, "shutter")
+
+    if ATTR_GAIN_MIN in payload or ATTR_GAIN_MAX in payload:
+        if final_exposure != "Manual":
+            raise HomeAssistantError(
+                "Gain settings can only be applied when Exposure is Manual"
+            )
+        isp.setdefault("gain", {})
+        if ATTR_GAIN_MIN in payload:
+            isp["gain"]["min"] = payload[ATTR_GAIN_MIN]
+        if ATTR_GAIN_MAX in payload:
+            isp["gain"]["max"] = payload[ATTR_GAIN_MAX]
+        _ensure_min_max_order(isp, "gain")
+
+    try:
+        await runtime.client.async_apply_full_isp(isp)
+    except ReolinkIspError as err:
+        raise HomeAssistantError(str(err)) from err
+
+    await coordinator.async_request_refresh()
+
+def _entry_from_device_id(hass: HomeAssistant, device_id: str) -> ConfigEntry:
+    """Resolve a Reolink ISP config entry from a device ID."""
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(device_id)
+    if device is None:
+        raise HomeAssistantError("Device not found")
+
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry and entry.domain == DOMAIN:
+            return entry
+
+    raise HomeAssistantError("Selected device is not managed by Reolink ISP Controls")
 
 def _runtime_from_device_id(hass: HomeAssistant, device_id: str) -> ReolinkIspRuntimeData:
     """Resolve a Reolink ISP runtime instance from a device ID."""

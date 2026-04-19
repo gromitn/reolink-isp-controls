@@ -17,6 +17,19 @@ CONF_POLL_INTERVAL = "poll_interval"
 
 EXPOSURE_OPTIONS = ["Auto", "LowNoise", "Anti-Smearing", "Manual"]
 
+PROFILE_DAY = "day"
+PROFILE_GLOOMY = "gloomy"
+PROFILE_NIGHT = "night"
+
+PROFILE_OPTIONS = [PROFILE_DAY, PROFILE_GLOOMY, PROFILE_NIGHT]
+
+OPTION_PROFILES = "profiles"
+OPTION_LAST_APPLIED_PROFILE = "last_applied_profile"
+
+SERVICE_SAVE_PROFILE = "save_profile"
+SERVICE_APPLY_PROFILE = "apply_profile"
+ATTR_PROFILE = "profile"
+
 SERVICE_APPLY_SETTINGS = "apply_settings"
 ATTR_EXPOSURE = "exposure"
 ATTR_SHUTTER_MIN = "shutter_min"

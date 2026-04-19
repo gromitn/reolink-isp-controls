@@ -61,6 +61,26 @@
           "description": "Optional gain maximum. Valid when exposure is Manual."
         }
       }
+    },
+    "save_profile": {
+      "name": "Save profile",
+      "description": "Save the camera's current Reolink ISP settings into one of the named profile slots.",
+      "fields": {
+        "profile": {
+          "name": "Profile",
+          "description": "Choose which saved profile slot to overwrite: day, gloomy, or night."
+        }
+      }
+    },
+    "apply_profile": {
+      "name": "Apply profile",
+      "description": "Apply a previously saved Reolink ISP profile to the camera in one write.",
+      "fields": {
+        "profile": {
+          "name": "Profile",
+          "description": "Choose which saved profile slot to apply: day, gloomy, or night."
+        }
+      }
     }
   }
 }
