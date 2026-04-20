@@ -253,6 +253,7 @@ async def _async_handle_apply_settings(hass: HomeAssistant, call: ServiceCall) -
 
     try:
         await coordinator.async_run_serialized_write(_write_operation)
+        coordinator.set_last_applied_profile(profile)
     except ReolinkIspError as err:
         raise HomeAssistantError(str(err)) from err
 
@@ -339,6 +340,11 @@ async def _async_handle_apply_profile(hass: HomeAssistant, call: ServiceCall) ->
 
     try:
         await coordinator.async_run_serialized_write(_write_operation)
+        coordinator.set_last_applied_profile(profile)
+
+        new_options = dict(entry.options)
+        new_options[OPTION_LAST_APPLIED_PROFILE] = profile
+        hass.config_entries.async_update_entry(entry, options=new_options)
     except ReolinkIspError as err:
         raise HomeAssistantError(str(err)) from err
 

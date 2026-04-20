@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 DOMAIN = "reolink_isp"
-PLATFORMS: list[str] = ["select", "number"]
+PLATFORMS: list[str] = ["select", "number", "sensor"]
 
 DEFAULT_PROTOCOL = "http"
 DEFAULT_VERIFY_SSL = False

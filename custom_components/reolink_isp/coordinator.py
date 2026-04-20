@@ -14,7 +14,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import ReolinkIspClient
-from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
+from .const import (
+    CONF_POLL_INTERVAL,
+    DEFAULT_POLL_INTERVAL,
+    DOMAIN,
+    OPTION_LAST_APPLIED_PROFILE,
+)
 from .errors import ReolinkIspError
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,11 +56,22 @@ class ReolinkIspCoordinator(DataUpdateCoordinator[ReolinkIspSnapshot]):
         self._entry = entry
         self._write_lock = asyncio.Lock()
         self._write_in_progress = False
+        self._last_applied_profile: str | None = entry.options.get(OPTION_LAST_APPLIED_PROFILE)
 
     @property
     def write_in_progress(self) -> bool:
         """Return whether a write/verify cycle is currently running."""
         return self._write_in_progress
+
+    @property
+    def last_applied_profile(self) -> str | None:
+        """Return the last applied profile for this runtime."""
+        return self._last_applied_profile
+
+    def set_last_applied_profile(self, profile: str | None) -> None:
+        """Store and publish the last applied profile."""
+        self._last_applied_profile = profile
+        self.async_update_listeners()
 
     async def async_run_serialized_write(
         self,
