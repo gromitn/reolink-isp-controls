@@ -248,12 +248,13 @@ async def _async_handle_apply_settings(hass: HomeAssistant, call: ServiceCall) -
     ):
         raise HomeAssistantError("No ISP settings were provided")
 
-    try:
+    async def _write_operation() -> None:
         await runtime.client.async_apply_full_isp(isp)
+
+    try:
+        await coordinator.async_run_serialized_write(_write_operation)
     except ReolinkIspError as err:
         raise HomeAssistantError(str(err)) from err
-
-    await coordinator.async_request_refresh()
 
 async def _async_handle_save_profile(hass: HomeAssistant, call: ServiceCall) -> None:
     """Save the current camera settings into a named profile slot."""
@@ -328,12 +329,13 @@ async def _async_handle_apply_profile(hass: HomeAssistant, call: ServiceCall) ->
             isp["gain"]["max"] = payload[ATTR_GAIN_MAX]
         _ensure_min_max_order(isp, "gain")
 
-    try:
+    async def _write_operation() -> None:
         await runtime.client.async_apply_full_isp(isp)
+
+    try:
+        await coordinator.async_run_serialized_write(_write_operation)
     except ReolinkIspError as err:
         raise HomeAssistantError(str(err)) from err
-
-    await coordinator.async_request_refresh()
 
 def _entry_from_device_id(hass: HomeAssistant, device_id: str) -> ConfigEntry:
     """Resolve a Reolink ISP config entry from a device ID."""

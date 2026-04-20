@@ -138,12 +138,13 @@ class ReolinkIspNumber(ReolinkIspEntity, NumberEntity):
         if self.entity_description.block == "shutter":
             _ensure_min_max_order(isp, "shutter")
 
-        try:
+        async def _write_operation() -> None:
             await self.coordinator.client.async_apply_full_isp(isp)
+
+        try:
+            await self.coordinator.async_run_serialized_write(_write_operation)
         except ReolinkIspError as err:
             raise HomeAssistantError(str(err)) from err
-
-        await self.coordinator.async_request_refresh()
 
 
 def _ensure_min_max_order(isp: dict, block_name: str) -> None:
