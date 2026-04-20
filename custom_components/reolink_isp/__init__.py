@@ -71,7 +71,7 @@ class ReolinkIspRuntimeData:
     coordinator: ReolinkIspCoordinator
 
 
-type ReolinkIspConfigEntry = ConfigEntry[ReolinkIspRuntimeData]
+ReolinkIspConfigEntry = ConfigEntry[ReolinkIspRuntimeData]
 
 
 async def async_setup(hass: HomeAssistant, _config: dict[str, Any]) -> bool:
