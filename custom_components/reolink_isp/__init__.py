@@ -269,9 +269,14 @@ async def _async_handle_save_profile(hass: HomeAssistant, call: ServiceCall) -> 
 
     runtime = _runtime_from_device_id(hass, device_ids[0])
     entry = _entry_from_device_id(hass, device_ids[0])
+    coordinator = runtime.coordinator
+
+    await coordinator.async_refresh()
+    if coordinator.data is None:
+        raise HomeAssistantError("Could not refresh current camera settings before saving profile")
 
     profiles = _get_saved_profiles(entry)
-    profiles[profile] = _profile_payload_from_isp(runtime.coordinator.data.isp)
+    profiles[profile] = _profile_payload_from_isp(coordinator.data.isp)
 
     new_options = dict(entry.options)
     new_options[OPTION_PROFILES] = profiles
