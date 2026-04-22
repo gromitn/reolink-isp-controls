@@ -135,4 +135,4 @@ data:
 
 Current release series: **v0.1.x**
 
-This is an early MVP, but the core shutter/gain workflow is already working in Home Assistant.
+This is an early MVP, but the core shutter/gain workflow is already working in Home Assistant
