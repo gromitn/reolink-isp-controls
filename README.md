@@ -17,6 +17,11 @@ This integration currently provides:
   - **Shutter Min**
   - **Shutter Max**
 - Device-level custom action **`reolink_isp.apply_settings`** for atomic multi-setting writes
+- Device-level custom actions **`reolink_isp.save_profile`** and **`reolink_isp.apply_profile`** for user-saved profile slots
+- Fixed profile slots for **day**, **gloomy**, and **night**
+- Diagnostic sensors for:
+  - **Last Applied Profile**
+  - **Saved Profile Slots**
 - Read-back polling so Home Assistant reflects what the camera actually saved
 - The proven staged workaround for locked shutter and gain changes on affected firmware
 
@@ -43,6 +48,13 @@ This integration is designed to expose just those useful controls in Home Assist
 - **Apply settings action**
   - Can apply any combination of exposure, shutter, and gain in a single camera write
   - Targets the device, not an individual entity
+- **Saved profiles**
+  - Save the current camera settings into one of three named slots: `day`, `gloomy`, or `night`
+  - Apply a saved slot later using `reolink_isp.apply_profile`
+  - If a profile slot has not been saved yet, the integration returns a clear error
+- **Profile sensors**
+  - **Last Applied Profile** shows the most recently applied profile slot
+  - **Saved Profile Slots** shows which profile slots currently contain saved values  
 
 When a setting is changed, the integration writes it to the camera and then reads the ISP settings back so Home Assistant shows the actual saved value.
 
@@ -124,6 +136,40 @@ data:
   gain_min: 30
   gain_max: 30
 ```
+
+## User-saved profiles
+
+The integration includes three fixed profile slots:
+
+- `day`
+- `gloomy`
+- `night`
+
+These are not hard-coded presets. Each slot stores the camera's current Exposure, Shutter Min/Max, and Gain Min/Max values when you save it.
+
+This lets you tune the camera manually, save the current state as a named profile, and recall it later.
+
+### Save a profile
+
+```yaml
+action: reolink_isp.save_profile
+target:
+  device_id: YOUR_DEVICE_ID
+data:
+  profile: night
+```
+
+### Apply a profile
+
+```yaml
+action: reolink_isp.apply_profile
+target:
+  device_id: YOUR_DEVICE_ID
+data:
+  profile: night
+```
+
+The `gloomy` slot is intended for in-between lighting conditions such as dawn, dusk, overcast weather, or storms.
 
 ## Notes
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from dataclasses import dataclass
 
 from homeassistant.components.number import (
@@ -129,16 +128,17 @@ class ReolinkIspNumber(ReolinkIspEntity, NumberEntity):
                 f"{self.entity_description.name} must be a whole number"
             )
 
-        isp = deepcopy(self._isp)
-        isp.setdefault(self.entity_description.block, {})
-        isp[self.entity_description.block][self.entity_description.item] = int(value)
-
-        if self.entity_description.block == "gain":
-            _ensure_min_max_order(isp, "gain")
-        if self.entity_description.block == "shutter":
-            _ensure_min_max_order(isp, "shutter")
-
         async def _write_operation() -> None:
+            # Fresh live base every time, matching the known-good desktop/PowerShell flow.
+            isp = await self.coordinator.client.async_get_isp()
+            isp.setdefault(self.entity_description.block, {})
+            isp[self.entity_description.block][self.entity_description.item] = int(value)
+
+            if self.entity_description.block == "gain":
+                _ensure_min_max_order(isp, "gain")
+            if self.entity_description.block == "shutter":
+                _ensure_min_max_order(isp, "shutter")
+
             await self.coordinator.client.async_apply_full_isp(isp)
 
         try:

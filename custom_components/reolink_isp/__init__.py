@@ -203,39 +203,6 @@ async def _async_handle_apply_settings(hass: HomeAssistant, call: ServiceCall) -
     if len(device_ids) != 1:
         raise HomeAssistantError("Select exactly one Reolink ISP device")
 
-    runtime = _runtime_from_device_id(hass, device_ids[0])
-    coordinator = runtime.coordinator
-
-    isp = deepcopy(coordinator.data.isp)
-    final_exposure = str(call.data.get(ATTR_EXPOSURE, isp.get("exposure", ""))).strip()
-
-    if ATTR_EXPOSURE in call.data:
-        isp["exposure"] = final_exposure
-
-    if ATTR_SHUTTER_MIN in call.data or ATTR_SHUTTER_MAX in call.data:
-        if final_exposure not in {"Manual", "Anti-Smearing"}:
-            raise HomeAssistantError(
-                "Shutter settings can only be applied when Exposure is Manual or Anti-Smearing"
-            )
-        isp.setdefault("shutter", {})
-        if ATTR_SHUTTER_MIN in call.data:
-            isp["shutter"]["min"] = call.data[ATTR_SHUTTER_MIN]
-        if ATTR_SHUTTER_MAX in call.data:
-            isp["shutter"]["max"] = call.data[ATTR_SHUTTER_MAX]
-        _ensure_min_max_order(isp, "shutter")
-
-    if ATTR_GAIN_MIN in call.data or ATTR_GAIN_MAX in call.data:
-        if final_exposure != "Manual":
-            raise HomeAssistantError(
-                "Gain settings can only be applied when Exposure is Manual"
-            )
-        isp.setdefault("gain", {})
-        if ATTR_GAIN_MIN in call.data:
-            isp["gain"]["min"] = call.data[ATTR_GAIN_MIN]
-        if ATTR_GAIN_MAX in call.data:
-            isp["gain"]["max"] = call.data[ATTR_GAIN_MAX]
-        _ensure_min_max_order(isp, "gain")
-
     if not any(
         key in call.data
         for key in (
@@ -247,6 +214,48 @@ async def _async_handle_apply_settings(hass: HomeAssistant, call: ServiceCall) -
         )
     ):
         raise HomeAssistantError("No ISP settings were provided")
+
+    runtime = _runtime_from_device_id(hass, device_ids[0])
+    coordinator = runtime.coordinator
+
+    async def _write_operation() -> None:
+        # Fresh live base every time, matching the known-good desktop/PowerShell flow.
+        isp = await runtime.client.async_get_isp()
+        final_exposure = str(call.data.get(ATTR_EXPOSURE, isp.get("exposure", ""))).strip()
+
+        if ATTR_EXPOSURE in call.data:
+            isp["exposure"] = final_exposure
+
+        if ATTR_SHUTTER_MIN in call.data or ATTR_SHUTTER_MAX in call.data:
+            if final_exposure not in {"Manual", "Anti-Smearing"}:
+                raise HomeAssistantError(
+                    "Shutter settings can only be applied when Exposure is Manual or Anti-Smearing"
+                )
+            isp.setdefault("shutter", {})
+            if ATTR_SHUTTER_MIN in call.data:
+                isp["shutter"]["min"] = call.data[ATTR_SHUTTER_MIN]
+            if ATTR_SHUTTER_MAX in call.data:
+                isp["shutter"]["max"] = call.data[ATTR_SHUTTER_MAX]
+            _ensure_min_max_order(isp, "shutter")
+
+        if ATTR_GAIN_MIN in call.data or ATTR_GAIN_MAX in call.data:
+            if final_exposure != "Manual":
+                raise HomeAssistantError(
+                    "Gain settings can only be applied when Exposure is Manual"
+                )
+            isp.setdefault("gain", {})
+            if ATTR_GAIN_MIN in call.data:
+                isp["gain"]["min"] = call.data[ATTR_GAIN_MIN]
+            if ATTR_GAIN_MAX in call.data:
+                isp["gain"]["max"] = call.data[ATTR_GAIN_MAX]
+            _ensure_min_max_order(isp, "gain")
+
+        await runtime.client.async_apply_full_isp(isp)
+
+    try:
+        await coordinator.async_run_serialized_write(_write_operation)
+    except ReolinkIspError as err:
+        raise HomeAssistantError(str(err)) from err
 
     async def _write_operation() -> None:
         await runtime.client.async_apply_full_isp(isp)
@@ -305,37 +314,39 @@ async def _async_handle_apply_profile(hass: HomeAssistant, call: ServiceCall) ->
         raise HomeAssistantError(f"Profile '{profile}' has not been saved yet")
 
     coordinator = runtime.coordinator
-    isp = deepcopy(coordinator.data.isp)
-    final_exposure = str(payload.get(ATTR_EXPOSURE, isp.get("exposure", ""))).strip()
-
-    if ATTR_EXPOSURE in payload:
-        isp["exposure"] = final_exposure
-
-    if ATTR_SHUTTER_MIN in payload or ATTR_SHUTTER_MAX in payload:
-        if final_exposure not in {"Manual", "Anti-Smearing"}:
-            raise HomeAssistantError(
-                "Shutter settings can only be applied when Exposure is Manual or Anti-Smearing"
-            )
-        isp.setdefault("shutter", {})
-        if ATTR_SHUTTER_MIN in payload:
-            isp["shutter"]["min"] = payload[ATTR_SHUTTER_MIN]
-        if ATTR_SHUTTER_MAX in payload:
-            isp["shutter"]["max"] = payload[ATTR_SHUTTER_MAX]
-        _ensure_min_max_order(isp, "shutter")
-
-    if ATTR_GAIN_MIN in payload or ATTR_GAIN_MAX in payload:
-        if final_exposure != "Manual":
-            raise HomeAssistantError(
-                "Gain settings can only be applied when Exposure is Manual"
-            )
-        isp.setdefault("gain", {})
-        if ATTR_GAIN_MIN in payload:
-            isp["gain"]["min"] = payload[ATTR_GAIN_MIN]
-        if ATTR_GAIN_MAX in payload:
-            isp["gain"]["max"] = payload[ATTR_GAIN_MAX]
-        _ensure_min_max_order(isp, "gain")
 
     async def _write_operation() -> None:
+        # Fresh live base every time, matching the known-good desktop/PowerShell flow.
+        isp = await runtime.client.async_get_isp()
+        final_exposure = str(payload.get(ATTR_EXPOSURE, isp.get("exposure", ""))).strip()
+
+        if ATTR_EXPOSURE in payload:
+            isp["exposure"] = final_exposure
+
+        if ATTR_SHUTTER_MIN in payload or ATTR_SHUTTER_MAX in payload:
+            if final_exposure not in {"Manual", "Anti-Smearing"}:
+                raise HomeAssistantError(
+                    "Shutter settings can only be applied when Exposure is Manual or Anti-Smearing"
+                )
+            isp.setdefault("shutter", {})
+            if ATTR_SHUTTER_MIN in payload:
+                isp["shutter"]["min"] = payload[ATTR_SHUTTER_MIN]
+            if ATTR_SHUTTER_MAX in payload:
+                isp["shutter"]["max"] = payload[ATTR_SHUTTER_MAX]
+            _ensure_min_max_order(isp, "shutter")
+
+        if ATTR_GAIN_MIN in payload or ATTR_GAIN_MAX in payload:
+            if final_exposure != "Manual":
+                raise HomeAssistantError(
+                    "Gain settings can only be applied when Exposure is Manual"
+                )
+            isp.setdefault("gain", {})
+            if ATTR_GAIN_MIN in payload:
+                isp["gain"]["min"] = payload[ATTR_GAIN_MIN]
+            if ATTR_GAIN_MAX in payload:
+                isp["gain"]["max"] = payload[ATTR_GAIN_MAX]
+            _ensure_min_max_order(isp, "gain")
+
         await runtime.client.async_apply_full_isp(isp)
 
     try:
