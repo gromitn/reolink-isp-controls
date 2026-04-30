@@ -257,15 +257,6 @@ async def _async_handle_apply_settings(hass: HomeAssistant, call: ServiceCall) -
     except ReolinkIspError as err:
         raise HomeAssistantError(str(err)) from err
 
-    async def _write_operation() -> None:
-        await runtime.client.async_apply_full_isp(isp)
-
-    try:
-        await coordinator.async_run_serialized_write(_write_operation)
-        coordinator.set_last_applied_profile(profile)
-    except ReolinkIspError as err:
-        raise HomeAssistantError(str(err)) from err
-
 async def _async_handle_save_profile(hass: HomeAssistant, call: ServiceCall) -> None:
     """Save the current camera settings into a named profile slot."""
     device_ids = call.data[ATTR_DEVICE_ID]
