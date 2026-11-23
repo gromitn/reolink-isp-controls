@@ -357,7 +357,9 @@ def _entry_from_device_id(hass: HomeAssistant, device_id: str) -> ConfigEntry:
     if device is None:
         raise HomeAssistantError("Device not found")
 
-    for entry_id in device.config_entries:
+    # Each Reolink ISP device belongs to one config entry.
+    entry_id = device.config_entry_id
+    if entry_id is not None:
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry and entry.domain == DOMAIN:
             return entry
@@ -373,7 +375,8 @@ def _runtime_from_device_id(hass: HomeAssistant, device_id: str) -> ReolinkIspRu
 
     entries: dict[str, ReolinkIspRuntimeData] = hass.data.get(DOMAIN, {}).get("entries", {})
 
-    for entry_id in device.config_entries:
+    entry_id = device.config_entry_id
+    if entry_id is not None:
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry and entry.domain == DOMAIN and entry_id in entries:
             return entries[entry_id]
